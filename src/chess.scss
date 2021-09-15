@@ -1,0 +1,41 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 50px);
+  grid-template-rows: repeat(8, 50px);
+
+  .square {
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+
+    &::before {
+      content: attr(data-index);
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 10px;
+    }
+
+    &:nth-child(-2n + 8),
+    &:nth-child(8) ~ div:nth-child(-2n + 15),
+    &:nth-child(17) ~ div:nth-child(-2n + 24),
+    &:nth-child(24) ~ div:nth-child(-2n + 31),
+    &:nth-child(32) ~ div:nth-child(-2n + 40),
+    &:nth-child(40) ~ div:nth-child(-2n + 47),
+    &:nth-child(49) ~ div:nth-child(-2n + 56),
+    &:nth-child(56) ~ div:nth-child(-2n + 63) {
+      background-color: #ccc;
+    }
+
+    &.selected {
+      border: 3px solid rgb(20, 12, 124);
+    }
+
+    &.hightlight {
+      border: 1px solid rgb(76, 97, 52);
+    }
+  }
+}
