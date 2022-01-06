@@ -1,4 +1,4 @@
-export enum Pieces {
+export enum Piece {
   white_king = '♔',
   white_queen = '♕',
   white_bishop = '♗',
@@ -17,17 +17,17 @@ export const getInitialPiecePositionByIndex = (index: number) => {
   switch (index) {
     case 0:
     case 7:
-      return Pieces.black_rook;
+      return Piece.black_rook;
     case 1:
     case 6:
-      return Pieces.black_knight;
+      return Piece.black_knight;
     case 2:
     case 5:
-      return Pieces.black_bishop;
+      return Piece.black_bishop;
     case 3:
-      return Pieces.black_queen;
+      return Piece.black_queen;
     case 4:
-      return Pieces.black_king;
+      return Piece.black_king;
     case 8:
     case 9:
     case 10:
@@ -36,20 +36,20 @@ export const getInitialPiecePositionByIndex = (index: number) => {
     case 13:
     case 14:
     case 15:
-      return Pieces.black_pawn;
+      return Piece.black_pawn;
     case 56:
     case 63:
-      return Pieces.white_rook;
+      return Piece.white_rook;
     case 57:
     case 62:
-      return Pieces.white_knight;
+      return Piece.white_knight;
     case 58:
     case 61:
-      return Pieces.white_bishop;
+      return Piece.white_bishop;
     case 59:
-      return Pieces.white_queen;
+      return Piece.white_queen;
     case 60:
-      return Pieces.white_king;
+      return Piece.white_king;
     case 48:
     case 49:
     case 50:
@@ -58,11 +58,24 @@ export const getInitialPiecePositionByIndex = (index: number) => {
     case 53:
     case 54:
     case 55:
-      return Pieces.white_pawn;
+      return Piece.white_pawn;
     default:
       return '';
   }
 };
 
-export const isAKnight = (piece: string) =>
-  piece === Pieces.white_knight || piece === Pieces.black_knight;
+const getColorByPiece = (piece: string) =>
+  Object.entries(Piece)
+    .find(([, pieceValue]) => pieceValue === piece)?.[0]
+    .split('_')[0] ?? 'white';
+
+export const getCapturablesByPiece = (piece: string) => {
+  const capturableColor =
+    getColorByPiece(piece) === 'white' ? 'black' : 'white';
+
+  return Object.entries(Piece)
+    .filter(
+      ([name]) => name.includes(capturableColor) && !name.includes('king'),
+    )
+    .map(([, piece]) => piece);
+};

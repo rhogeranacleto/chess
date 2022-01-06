@@ -37,5 +37,9 @@
     &.hightlight {
       border: 1px solid rgb(76, 97, 52);
     }
+
+    &.capturable {
+      border: 1px solid red;
+    }
   }
 }

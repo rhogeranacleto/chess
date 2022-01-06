@@ -1,11 +1,15 @@
 import { flatten } from '../fp/flatten';
 import { toFP, toPipeline } from '../fp/flow';
-import { PIECES_MOVES } from './moves';
-import { getInitialPiecePositionByIndex, isAKnight, Pieces } from './pieces';
+import { PIECES_CAPTURABLE, PIECES_MOVES } from './moves';
+import {
+  getCapturablesByPiece,
+  getInitialPiecePositionByIndex,
+  Piece,
+} from './pieces';
 
-export type IBoard = string[];
+export type IBoard = (Piece | '')[];
 
-export const getNewBoard = (): IBoard => new Array(64).fill(Pieces.white_queen);
+export const getNewBoard = (): IBoard => new Array(64).fill(Piece.white_queen);
 
 export const getChunkedBoard = (board: IBoard) =>
   board.reduce<string[][]>(
@@ -60,30 +64,53 @@ export const getAvailableIndexesForAll = (
     : moveIndexes;
 };
 
+const getCapturableIndexesForAll = (
+  moveIndexes: number[],
+  board: IBoard,
+  possibleCapturablePieces: Piece[],
+) => {
+  const firstIndexWithPiece = moveIndexes.find((index) => board[index] !== '');
+
+  return firstIndexWithPiece !== undefined &&
+    possibleCapturablePieces.includes(board[firstIndexWithPiece] as Piece)
+    ? [firstIndexWithPiece]
+    : [];
+};
+
 export const getAvailableIndexesForKnight = (
   moveIndexes: number[],
   board: IBoard,
-) => {
-  console.log(moveIndexes);
-  return moveIndexes.filter((index) => board[index] === '');
-};
+) => moveIndexes.filter((index) => board[index] === '');
+
+export const getCapturableIndexesForKnight = (
+  moveIndexes: number[],
+  board: IBoard,
+  possibleCapturablePieces: Piece[],
+) =>
+  moveIndexes.filter((index) =>
+    possibleCapturablePieces.includes(board[index] as Piece),
+  );
 
 const getAvailableIndexes = (
   indexes: number[][],
   board: IBoard,
   pieceIndex: number,
 ) =>
-  indexes.map((moveIndexes) =>
-    isAKnight(board[pieceIndex])
-      ? getAvailableIndexesForKnight(moveIndexes, board)
-      : getAvailableIndexesForAll(moveIndexes, board),
-  );
+  indexes.map((moveIndexes) => {
+    switch (board[pieceIndex]) {
+      case Piece.black_knight:
+      case Piece.white_knight:
+        return getAvailableIndexesForKnight(moveIndexes, board);
+      default:
+        return getAvailableIndexesForAll(moveIndexes, board);
+    }
+  });
 
 export const chooseMovesGetterByPiece = (index: number, board: IBoard) =>
   PIECES_MOVES[board[index]];
 
 export const getHighlightSquares = (board: IBoard, index?: number) => {
-  if (!index) return [];
+  if (index === undefined) return [];
 
   const getAvailableIndexesOfBoard = toFP(getAvailableIndexes, index, board);
 
@@ -96,13 +123,63 @@ export const getHighlightSquares = (board: IBoard, index?: number) => {
   return highlightSquaresPipeline(index) as number[];
 };
 
+const chooseCapturableGetterByPiece = (index: number, board: IBoard) =>
+  PIECES_CAPTURABLE[board[index]];
+
+const getCapturableIndexes = (
+  indexes: number[][],
+  board: IBoard,
+  pieceIndex: number,
+  possibleCapturablePieces: Piece[],
+) =>
+  indexes.map((moveIndexes) => {
+    switch (board[pieceIndex]) {
+      case Piece.black_knight:
+      case Piece.white_knight:
+        return getCapturableIndexesForKnight(
+          moveIndexes,
+          board,
+          possibleCapturablePieces,
+        );
+      default:
+        return getCapturableIndexesForAll(
+          moveIndexes,
+          board,
+          possibleCapturablePieces,
+        );
+    }
+  });
+
+export const getCapturableSquares = (board: IBoard, index?: number) => {
+  if (index === undefined) return [];
+
+  const possibleCapturablePieces = getCapturablesByPiece(board[index]);
+
+  const getCapturableIndexesOfBoard = toFP(
+    getCapturableIndexes,
+    possibleCapturablePieces,
+    index,
+    board,
+  );
+
+  const highlightSquaresPipeline = toPipeline(
+    chooseCapturableGetterByPiece(index, board),
+    getCapturableIndexesOfBoard,
+    flatten,
+  );
+
+  return highlightSquaresPipeline(index) as number[];
+};
+
 export const movePieceInIndexTo = (
   board: IBoard,
   originalIndex: number,
   targetIndex: number,
 ) => {
   const boardCopy = [...board];
-  const availableIndexes = getHighlightSquares(board, originalIndex);
+  const availableIndexes = getHighlightSquares(board, originalIndex).concat(
+    getCapturableSquares(board, originalIndex),
+  );
 
   if (availableIndexes.includes(targetIndex)) {
     boardCopy[targetIndex] = boardCopy[originalIndex];
