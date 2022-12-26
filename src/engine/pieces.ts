@@ -64,18 +64,17 @@ export const getInitialPiecePositionByIndex = (index: number) => {
   }
 };
 
-const getColorByPiece = (piece: string) =>
-  Object.entries(Piece)
+export const getColorByPiece = (piece: string) =>
+  (Object.entries(Piece)
     .find(([, pieceValue]) => pieceValue === piece)?.[0]
-    .split('_')[0] ?? 'white';
+    .split('_')[0] ?? 'white') as 'white' | 'black';
 
-export const getCapturablesByPiece = (piece: string) => {
-  const capturableColor =
-    getColorByPiece(piece) === 'white' ? 'black' : 'white';
+export const excludeKings = (pieces: Piece[]) =>
+  pieces.filter(
+    (piece) => ![Piece.white_king, Piece.black_king].includes(piece),
+  );
 
-  return Object.entries(Piece)
-    .filter(
-      ([name]) => name.includes(capturableColor) && !name.includes('king'),
-    )
+export const getCapturablesByColor = (color: 'white' | 'black') =>
+  Object.entries(Piece)
+    .filter(([name]) => name.includes(color) && !name.includes('king'))
     .map(([, piece]) => piece);
-};

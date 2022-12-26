@@ -2,7 +2,9 @@ import { flatten } from '../fp/flatten';
 import { toFP, toPipeline } from '../fp/flow';
 import { PIECES_CAPTURABLE, PIECES_MOVES } from './moves';
 import {
-  getCapturablesByPiece,
+  excludeKings,
+  getCapturablesByColor,
+  getColorByPiece,
   getInitialPiecePositionByIndex,
   Piece,
 } from './pieces';
@@ -153,7 +155,11 @@ const getCapturableIndexes = (
 export const getCapturableSquares = (board: IBoard, index?: number) => {
   if (index === undefined) return [];
 
-  const possibleCapturablePieces = getCapturablesByPiece(board[index]);
+  const possibleCapturablePieces = toPipeline(
+    getColorByPiece,
+    getCapturablesByColor,
+    // excludeKings,
+  )(board[index]);
 
   const getCapturableIndexesOfBoard = toFP(
     getCapturableIndexes,
@@ -187,4 +193,26 @@ export const movePieceInIndexTo = (
   }
 
   return boardCopy;
+};
+
+export const kingIsOnCheck = (board: IBoard) => {
+  const piecesCanCheckKing = getCapturablesByColor('white');
+
+  console.log(
+    isSquareCheckedPieces(
+      piecesCanCheckKing,
+      board,
+      board.findIndex((square) => square === Piece.black_king),
+    ),
+  );
+};
+
+const isSquareCheckedPieces = (
+  pieces: Piece[],
+  board: IBoard,
+  square: number,
+) => {
+  pieces.forEach((piece) => {
+    console.log(piece, square);
+  });
 };

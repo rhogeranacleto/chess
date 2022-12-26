@@ -7,6 +7,7 @@ import {
   getHighlightSquares,
   movePieceInIndexTo,
   getCapturableSquares,
+  kingIsOnCheck,
 } from './engine/board';
 import { classNames } from './helpers';
 
@@ -63,6 +64,9 @@ export const GameBoard = () => {
 
   const hightLightSquares = getHighlightSquares(board, selectedSquare);
   const capturable = getCapturableSquares(board, selectedSquare);
+  const onCheckKing = kingIsOnCheck(board);
+
+  console.log(onCheckKing);
 
   return (
     <div>
